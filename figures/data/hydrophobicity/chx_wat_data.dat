@@ -1,0 +1,21 @@
+#Comparing the polarities of the amino acids: side-chain distribution coefficients between the vapor phase, cyclohexane, 1-octanol, and neutral aqueous solution, Anna Radzicka and Richard Wolfenden, Biochemistry 1988 27 (5), 1664-1670, DOI: 10.1021/bi00405a042 (kcal/mol)
+#resid pH DeltaG_WLXLL
+ALA 7 1.81
+ARG 7 -14.92
+ASN 7 -6.64
+ASP 7 -8.72
+CYS 7 1.28
+GLN 7 -5.54
+GLU 7 -6.81
+GLY 7 0.94
+HIS 7 -4.66
+ILE 7 4.92
+LEU 7 4.92
+LYS 7 -5.55
+MET 7 2.35
+PHE 7 2.98
+SER 7 -3.40
+THR 7 -2.57
+TRP 7 2.33
+TYR 7 -0.14
+VAL 7 4.04

@@ -1,0 +1,16 @@
+REMARK  GENERATE INDIVIDUAL PDB FILES OF SOLUTES                                      
+REMARK   DATE:    11/ 1/22     15:15:54      CREATED BY USER: plague                  
+ATOM      1  CB  SCHE    1      -1.905   0.153  -0.000  1.00  0.00      SCHE
+ATOM      2  HB1 SCHE    1      -2.343  -0.865  -0.000  1.00  0.00      SCHE
+ATOM      3  HB2 SCHE    1      -2.245   0.701   0.903  1.00  0.00      SCHE
+ATOM      4  HB3 SCHE    1      -2.245   0.702  -0.903  1.00  0.00      SCHE
+ATOM      5  ND1 SCHE    1       0.303   1.254   0.000  1.00  0.00      SCHE
+ATOM      6  CG  SCHE    1      -0.416   0.078   0.000  1.00  0.00      SCHE
+ATOM      7  CE1 SCHE    1       1.567   0.885   0.000  1.00  0.00      SCHE
+ATOM      8  HE1 SCHE    1       2.412   1.574  -0.000  1.00  0.00      SCHE
+ATOM      9  NE2 SCHE    1       1.699  -0.465   0.000  1.00  0.00      SCHE
+ATOM     10  HE2 SCHE    1       2.554  -0.981   0.000  1.00  0.00      SCHE
+ATOM     11  CD2 SCHE    1       0.424  -0.990   0.000  1.00  0.00      SCHE
+ATOM     12  HD2 SCHE    1       0.196  -2.046  -0.000  1.00  0.00      SCHE
+TER      13      SCHE     1
+END

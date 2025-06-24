@@ -1,0 +1,16 @@
+REMARK  GENERATE INDIVIDUAL PDB FILES OF SOLUTES                                      
+REMARK   DATE:    11/ 1/22     15:15:54      CREATED BY USER: plague                  
+ATOM      1  ND1 SCHD    1       0.723   0.870   0.000  1.00  0.00      SCHD
+ATOM      2  HD1 SCHD    1       0.574   1.857   0.000  1.00  0.00      SCHD
+ATOM      3  CG  SCHD    1      -0.255  -0.099   0.000  1.00  0.00      SCHD
+ATOM      4  CB  SCHD    1      -1.724   0.209  -0.000  1.00  0.00      SCHD
+ATOM      5  HB1 SCHD    1      -2.314  -0.732   0.000  1.00  0.00      SCHD
+ATOM      6  HB2 SCHD    1      -1.993   0.796   0.904  1.00  0.00      SCHD
+ATOM      7  HB3 SCHD    1      -1.993   0.796  -0.904  1.00  0.00      SCHD
+ATOM      8  NE2 SCHD    1       1.772  -1.080  -0.000  1.00  0.00      SCHD
+ATOM      9  CD2 SCHD    1       0.404  -1.291   0.000  1.00  0.00      SCHD
+ATOM     10  HD2 SCHD    1       0.010  -2.299   0.000  1.00  0.00      SCHD
+ATOM     11  CE1 SCHD    1       1.917   0.228  -0.000  1.00  0.00      SCHD
+ATOM     12  HE1 SCHD    1       2.879   0.743  -0.000  1.00  0.00      SCHD
+TER      13      SCHD     1
+END
