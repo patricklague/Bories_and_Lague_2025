@@ -15,7 +15,7 @@ This directory contains all the necessary files to reproduce and understand the 
 
 - **`parameter_files/`**  
   Includes all parameter files used in the molecular dynamics simulations:
-  - **`sidechain_toppar/`**: Contains force field parameters specific to the analog sidechains.
+  - **`sidechain_toppar`**: Contains force field parameters specific to the analog sidechains.
 
 - **`input_systems/`**  
   Provides the initial system setup for each analog simulation, including PDB and PSF files.
