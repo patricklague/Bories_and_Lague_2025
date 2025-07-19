@@ -19,17 +19,17 @@ for filename in file_list:
     df_filtered = df[(df["#section"] >= 400) & (df["#section"] <= 1000)]
 
     # Récupérer toutes les colonnes "thickness-*"
-    thickness_cols = [col for col in df_filtered.columns if col.startswith("apl")]
+    apl_cols = [col for col in df_filtered.columns if col.startswith("apl")]
 
     # Calcul de la moyenne et de l'erreur standard (std / sqrt(n))
-    all_values = df_filtered[thickness_cols].values.flatten()
+    all_values = df_filtered[apl_cols].values.flatten()
     all_values = all_values[~np.isnan(all_values)]  # retirer les éventuels NaNs
 
-    mean_thickness = np.mean(all_values)
+    mean_apl = np.mean(all_values)
     std_error = np.std(all_values, ddof=1) / np.sqrt(len(all_values))
 
     # Ajouter à la liste
-    results.append([systeme_name, mean_thickness, std_error])
+    results.append([systeme_name, mean_apl, std_error])
 
 # Création du DataFrame final
 summary_df = pd.DataFrame(results, columns=["name", "apl", "std_error"])
