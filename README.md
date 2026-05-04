@@ -25,7 +25,7 @@ Data, scripts, and outputs for all figures in the article.
   - `densityProfile-popc/` — POPC component density profiles
   - `aromatics_orientation/` — ring-orientation raw data, per-trajectory `vector_orientations/`, and the aggregated `freq_angle_<aa>.dat` 2D histograms
   - `SUPP_membrane_parm/` — per-analog `thickness/`, `area_per_lipid/`, `order_parameter/`, `densityProfiles/` tables and the top-level `computed_*.csv` summaries
-  - `SUPP_monomer/` — `monomer_multimer_rates_45A_9batches.dat` (mean ± std monomer/multimer rates over 9 batches)
+  - `SUPP_monomer/` — `monomer_rates_45A_9batches.dat` (mean ± std monomer/multimer rates over 9 batches)
   - `SUPP_hydrophobicity/`, `extra_analysis/` — auxiliary tables for the supplementary figures
 - **scripts/** — Jupyter notebooks that generate the figures (`PMF_plots.ipynb`, `density_popc_plot.ipynb`, `pKa_plot.ipynb`, `aromatics_orientation_plots.ipynb`, `SUPP_Membrane_parm.ipynb`, `SUPP_monomer_plots.ipynb`, `SUPP_hydrophobicity_plots.ipynb`, `SUPP_aromatics_orientation_plots.ipynb`) plus helper scripts under `aromatics_orientation/` and PyMOL scripts under `pymol/`
 - **plot/** — Output figure files (PNG)
