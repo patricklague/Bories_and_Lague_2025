@@ -13,7 +13,7 @@ Supporting data and scripts for the article.
   - Journal / preprint: `...`
   - Year: `2026`
 
-If you use these data, please cite both the Borealis dataset and the companion article above.
+If you use these data, please cite the companion article above.
 
 ## figures/
 
