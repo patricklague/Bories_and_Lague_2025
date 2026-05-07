@@ -91,57 +91,9 @@ Once the raw contact files are produced, `raw_to_distribution.py` bins them into
 **Purpose:** Take the raw outputs of steps 1–4 and turn them into the artifacts that are actually shipped (Borealis trajectory bundle + the curated `figures/data/` tree). This step is the only one allowed to write outside `supp_files/method_script/`.
 
 **Contents:**
-
-- `format_borealis_trajectories.sh` — Concatenate the per-section NAMD `.dcd` files (99 sections per 100 ns window, 6 windows over the 401–1000 ns production span) into the public Borealis layout (`POPC-<AA>/trajectory{1,2,3}/section{401-500,501-600,601-700,701-800,801-900,901-1000}.dcd`) and copy the matching `popc-<aa>.psf` next to it.
-
 - `SUPP_membrane_parm/` — Per-system extraction and aggregation scripts that turn the raw `analysis_per_system.sh` outputs into the canonical `figures/data/SUPP_membrane_parm/` tables.
   - `thickness/`, `area_per_lipid/`, `order_parameter/`, `densityProfiles/` each contain a `run.sh` driver and a `get_*.py` extractor that merge the three per-trajectory raw files into a single per-analog `<aa>-<param>.dat`. Each `run.sh` keeps the original local source path as the active `DIR=...` and exposes a commented reviewer-facing alternative pointing at `../../../../results/POPC-aa/POPC-$aa/`. The merged file is moved to `figures/data/SUPP_membrane_parm/<subdir>/`.
   - `compute_thickness.py`, `compute_apl.py`, `compute_acm.py`, `compute_density_deviation.py`, `compute_order_deviation.py` — top-level aggregators that read the per-analog tables under `figures/data/SUPP_membrane_parm/<subdir>/` and produce the `computed_*.csv` summary files used by the figure notebooks.
 
 All scripts in this step apply the canonical naming conventions defined in `correctives/list_of_script.md` and emit headers compatible with `correctives/fix_header.py` so that no post-hoc header rewriting is needed.
 
----
-
-## Running on Borealis-formatted data
-
-The analysis scripts (steps 2–3 and `5-postprocessing/format_borealis_trajectories.sh`) were originally written against the local NAMD output, where every nanosecond lives in its own file (`<local-DIR>/charmm-gui/namd/out<t>/section<i>.dcd`, `i = 1 … 1000`). The public Borealis archive ships the same trajectories rebundled into 6 × 100 ns sections per replica:
-
-```
-POPC-<AA>/popc-<aa>.psf
-POPC-<AA>/trajectory<t>/section<s>.dcd     # s ∈ {401-500, 501-600, 601-700,
-                                           #      701-800, 801-900, 901-1000}
-```
-
-To drive any analysis script from the Borealis layout, replace its per-ns `for (( i=$first; i<=$last; i++ )) ; files+=section$i.dcd` loop with a list of the 6 published sections, and point `PSFFILE` at `POPC-${AA}/popc-${aa,,}.psf`. The two patterns below cover all current call sites.
-
-**Example A — single 600 ns trajectory (replaces step 2 / step 3 `get_trajectory.sh`):**
-
-```bash
-DIR="POPC-${aa^^}"
-SECTIONS=(401-500 501-600 601-700 701-800 801-900 901-1000)
-
-files=""
-for s in "${SECTIONS[@]}"; do
-  files="$files $DIR/trajectory${t}/section${s}.dcd"
-done
-catdcd -o trajectory${t}.dcd -stride 1 -i indexNoWat.ind $files
-```
-
-**Example B — three 200 ns batches (replaces `analysis_per_system.sh` when `batches=1`):**
-
-```bash
-DIR="POPC-${aa^^}"
-declare -A BATCH=( [401-600]="401-500 501-600" \
-                   [601-800]="601-700 701-800" \
-                   [801-1000]="801-900 901-1000" )
-
-for b in 401-600 601-800 801-1000; do
-  files=""
-  for s in ${BATCH[$b]}; do
-    files="$files $DIR/trajectory${t}/section${s}.dcd"
-  done
-  catdcd -o batch${b}.dcd -stride 1 -i indexNoWat.ind $files
-done
-```
-
-`format_borealis_trajectories.sh` is the inverse of this recipe (10 × `section${i}.dcd` → 1 × `section${start}-${end}.dcd`); skip it when starting from Borealis.
