@@ -14,8 +14,8 @@ analogs = [
 n_trajectories = 3
 n_batches = 3  # columns in each trajectory file (400-600, 600-800, 800-1000 ns)
 
-# Distribution mode directory (e.g. "monomer_4.5A", "monomer_6A", "total", ...)
-mode = "monomer_4.5A"  # used to find distribution files and name output dir
+# Distribution mode directory (e.g. "monomer_4.5A", "total", ...)
+mode = "total"  # used to find distribution files and name output dir
 
 # PMF constants
 k_B = 0.008314  # kJ/(mol*K)

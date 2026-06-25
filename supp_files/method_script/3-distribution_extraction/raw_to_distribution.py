@@ -9,17 +9,16 @@ import os
 analogs = [
     "sca", "scv", "scl", "sci", "scc", "scm", "scs", "sct", "scq",
     "scn", "scf", "scy", "scw", "scp", "glyd", "schd", "sche", "scdn",
-    "scen", "sckn", "scrn", "schp", "sccm", "scym", "scd", "sce", "sck", "scr"
-]
-analogs = ["scrn", "scw"]
+    "scen", "sckn", "scrn", "schp", "sccm", "scym", "scd", "sce", "sck", "scr", "scrn-1", "scw-1"
+    ]
 # Number of trajectories per analog
 n_trajectories = 3
 
 # Counting mode: 'monomer', 'multimer', or 'total'
-mode = "monomer"
+mode = "total"
 
 # Cutoff column to use (used for 'monomer' and 'multimer' modes)
-# Options: "4.5A_cutoff", "6A_cutoff", "8A_cutoff", "10A_cutoff"
+# Options: "4.5A_cutoff"
 cutoff = "4.5A_cutoff"
 
 # Z-bin width in angstroms

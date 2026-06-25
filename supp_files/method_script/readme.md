@@ -80,9 +80,9 @@ Once the raw contact files are produced, `raw_to_distribution.py` bins them into
 
 **Purpose:** Compute potentials of mean force (PMFs) from the density distributions extracted in step 3.
 
-**Entry point:** `run.sh`
+**Entry point:** `pmf-from-distribution.py`
 
-`run.sh` loops over all analogs, copies the relevant distribution files from step 3, runs `pmf-from-distribution.py`, and stores the output PMF data. The script handles the `total`, `monomer_4.5A`, and `multimer_4.5A` distribution modes through its parameters. Outputs land under `figures/data/pmf_data/{total,monomer_4.5A,multimer_4.5A}/<aa>/`.
+`pmf-from-distribution.py` loops over all analogs, copies the relevant distribution files from step 3, and stores the output PMF data. The script handles the `total`, `monomer_4.5A`, and `multimer_4.5A` distribution modes through its parameters. Outputs land under `figures/data/pmf_data/{total,monomer_4.5A,multimer_4.5A}/<aa>/`.
 
 ---
 
