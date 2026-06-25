@@ -28,7 +28,7 @@ do
       cp $DIR/analyses/traj$t/data/orderParameters/orderparameters-chain${i}*.dat .
       for j in 401-600 601-800 801-1000
       do
-        mv orderparameters-chain${i}$j.dat scd${i}-t${t}-$j.dat
+        mv orderparameters-chain${i}-$j.dat scd${i}-t${t}-$j.dat
       done
     done
     python get_scd.py

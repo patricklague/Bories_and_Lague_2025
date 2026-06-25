@@ -28,7 +28,7 @@ do
       cp $DIR/analyses/traj$t/data/densityProfiles/profile-${i}*.dat .
       for j in 401-600 601-800 801-1000
       do
-        mv profile-${i}$j.dat trajectory$t-$j.dat
+        mv profile-${i}-$j.dat trajectory$t-$j.dat
       done
     done
     python get_density.py

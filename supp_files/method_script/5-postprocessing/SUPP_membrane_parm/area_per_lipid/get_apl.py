@@ -14,12 +14,12 @@ for i, filename in enumerate(file_list, start=1):
 
     # Renommer colonnes
     df = df.rename(columns={"#section": "section"})
-    df[f"x{i}"] = df["x"]
-    df[f"y{i}"] = df["y"]
-    df[f"z{i}"] = df["z"]
-    df[f"apl{i}"] = (df[f"x{i}"] * df[f"y{i}"]) / 32
+    df[f"x-{i}"] = df["x"]
+    df[f"y-{i}"] = df["y"]
+    df[f"z-{i}"] = df["z"]
+    df[f"apl-{i}"] = (df[f"x-{i}"] * df[f"y-{i}"]) / 32
 
-    dfs.append(df[["section", f"x{i}", f"y{i}", f"z{i}", f"apl{i}"]])
+    dfs.append(df[["section", f"x-{i}", f"y-{i}", f"z-{i}", f"apl-{i}"]])
 
 # Fusion progressive sur 'section'
 merged = dfs[0]

@@ -16,7 +16,7 @@ for filename in file_list:
     # Extraire traj et bloc du nom de fichier: scd{chain}-t{traj}-{bloc}.dat
     parts = filename.replace('.dat', '').split('-')
     traj = parts[1].replace('t', '')
-    bloc = parts[2]
+    bloc = parts[2]+'-'+parts[3]
 
     col_name = f"SCD_traj{traj}_{bloc}"
     col_names.append(col_name)

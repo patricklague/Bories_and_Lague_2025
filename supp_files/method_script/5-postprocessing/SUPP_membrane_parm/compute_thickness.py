@@ -5,12 +5,14 @@ import pandas as pd
 NAMES = [
     'sca', 'scv', 'scl', 'sci', 'scc', 'scm', 'scs', 'sct', 'scn', 'scq',
     'scf', 'scy', 'scw', 'scp', 'glyd', 'sche', 'schd', 'scdn', 'scen', 'sckn', 'scrn',
-    'schp', 'scd', 'sce', 'sccm', 'scym', 'sck', 'scr', 'scrn-1', 'scw-1'
+    'schp', 'scd', 'sce', 'sccm', 'scym', 'sck', 'scr', 'scrn-1', 'scw-1',
+    'scf-1', 'scy-1', 'scv-1', 'sci-1', 'scl-1', 'scm-1'
 ]
 LABELS = [
     'ALA', 'VAL', 'LEU', 'ILE', 'CYS', 'MET', 'SER', 'THR', 'ASN', 'GLN',
     'PHE', 'TYR', 'TRP', 'PRO', 'GLYD', 'HSE', 'HSD', 'ASP0', 'GLU0', 'LYS0',
-    'ARG0', 'HSP+', 'ASP-', 'GLU-', 'CYS-', 'TYR-', 'LYS+', 'ARG+', 'ARG0 (0.1M)', 'TRP (0.1M)'
+    'ARG0', 'HSP+', 'ASP-', 'GLU-', 'CYS-', 'TYR-', 'LYS+', 'ARG+', 'ARG0 (0.1M)', 'TRP (0.1M)',
+    'PHE(0.1M)', 'TYR(0.1M)', 'VAL(0.1M)', 'ILE(0.1M)', 'LEU(0.1M)', 'MET(0.1M)'
 ]
 
 INPUT = '../../../../figures/data/SUPP_membrane_parm/thickness/all_thicknesses.dat'
