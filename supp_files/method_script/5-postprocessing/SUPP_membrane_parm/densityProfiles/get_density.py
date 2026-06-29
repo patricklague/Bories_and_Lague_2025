@@ -17,7 +17,7 @@ for filename in file_list:
     base = filename.replace('.dat', '').replace('trajectory', '')
     parts = base.split('-')
     traj = parts[0]
-    bloc = parts[1]
+    bloc = parts[1]+'-'+parts[2]
 
     col_name = f"dens_traj{traj}_{bloc}"
     col_names.append(col_name)
