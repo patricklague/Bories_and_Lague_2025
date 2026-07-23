@@ -7,6 +7,8 @@ The three production trajectories per system are stored on Borealis (DOI unavail
 `POPC-<AA>/trajectory{1,2,3}/section{401-500,501-600,601-700,701-800,801-900,901-1000}.dcd`
 plus the matching `popc-<aa>.psf`. See [Running on Borealis-formatted data](#running-on-borealis-formatted-data) at the end of this file for the exact command substitutions required to drive steps 2–4 from the public archive.
 
+The full list of dependencies (NAMD, VMD, catdcd, Packmol, Python packages, …) for both the pipeline below and the figure notebooks is given in the top-level [README.md](../../README.md#dependencies).
+
 ---
 
 ## 1-system_generation/
