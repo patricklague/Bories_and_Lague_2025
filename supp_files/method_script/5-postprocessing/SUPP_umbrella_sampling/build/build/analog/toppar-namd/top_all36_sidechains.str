@@ -1,0 +1,84 @@
+
+
+BONDS
+!
+!V(bond) = Kb(b - b0)**2
+!
+!Kb: kcal/mole/A**2
+!b0: A
+!
+!atom type Kb          b0
+!
+NH1  CP3 255.00     1.4630 ! AMINE aliphatic amines, SCP, from cgenff, CG3AM1 NG311 
+
+ANGLES
+!
+!V(angle) = Ktheta(Theta - Theta0)**2
+!
+!V(Urey-Bradley) = Kub(S - S0)**2
+!
+!Ktheta: kcal/mole/rad**2
+!Theta0: degrees
+!Kub: kcal/mole/A**2 (Urey-Bradley)
+!S0: A
+!
+!atom types     Ktheta    Theta0   Kub     S0
+!
+CT3 CT2  CD     52.000   108.0000 ! from CT2A CT2  CD
+NR2  CPH1 CT3   45.800   120.0000 ! ALLOW ARO; from NR2  CPH1 CT2; for SCHE
+NR3  CPH1 CT3   45.800   122.0000 ! ALLOW ARO; from NR3  CPH1 CT2; for SCHP
+H    NH1  CP3   42.10    108.90    5.00   2.0292 ! AMINE aliphatic amines, SCP, from cgenff CG3AM1 NG311  HGPAM1
+CP3  NH1  CP3   40.50    112.20    5.00   2.4217 ! AMINE aliphatic amines, SCP, from cgenff CG3AM1 NG311  CG3AM1 
+NH1  CP3  HA2   30.50    109.70   50.00   2.1400 ! AMINE aliphatic amines, SCP, from cgenff NG311  CG3AM1 HGAAM1
+NH1  CP3  CP2   30.50    109.70   50.00   2.1400 
+
+
+
+DIHEDRALS
+!
+!V(dihedral) = Kchi(1 + cos(n(chi) - delta))
+!
+!Kchi: kcal/mole
+!n: multiplicity
+!delta: degrees
+!
+!atom types             Kchi    n   delta
+!
+CT3  CPH1 NR2  CPH2     3.0000  2   180.00 ! ALLOW ARO; for SCHE; from CT2  CPH1 NR2  CPH2
+CT3  CPH1 NR3  CPH2     2.5000  2   180.00 ! ALLOW ARO; for SCHP; from CT2  CPH1 NR3  CPH2
+H    NH1  CP3  HA2      0.4200  3     0.00 ! AMINE aliphatic amines, SCP, from cgenff HGAAM1 CG3AM1 NG311  HGPAM1
+H    NH1  CP3  CP2      0.4200  3     0.00 ! AMINE aliphatic amines, SCP, from cgenff HGAAM1 CG3AM1 NG311  HGPAM1
+CP3  NH1  CP3  HA2      0.0800  3     0.00 ! AMINE aliphatic amines, SCP, from HGAAM1 CG3AM1 NG311  CG3AM1
+CP3  NH1  CP3  CP2      0.0800  3     0.00 ! AMINE aliphatic amines, SCP, from HGAAM1 CG3AM1 NG311  CG3AM1
+
+!
+IMPROPER
+!
+!V(improper) = Kpsi(psi - psi0)**2
+!
+!Kpsi: kcal/mole/rad**2
+!psi0: degrees
+!note that the second column of numbers (0) is ignored
+!
+!atom types           Kpsi                   psi0
+!
+
+
+
+NONBONDED nbxmod  5 atom cdiel fshift vatom vdistance vfswitch -
+cutnb 14.0 ctofnb 12.0 ctonnb 10.0 eps 1.0 e14fac 1.0 wmin 1.5
+
+!TIP3P LJ parameters
+!HT       0.0       -0.046     0.2245
+!OT       0.0       -0.1521    1.7682
+
+NBFIX
+!              Emin         Rmin
+!            (kcal/mol)     (A)
+!SOD    CLA      -0.083875   3.731 !  From osmotic pressure calibration, J. Phys.Chem.Lett. 1:183-189
+
+
+END
+
+return
+

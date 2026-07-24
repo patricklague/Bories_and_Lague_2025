@@ -59,34 +59,27 @@ The versions listed below are the ones actually used to produce the published da
 
 | Tool | Version | Used by | Purpose |
 | --- | --- | --- | --- |
-| **NAMD** | 2.14 (Alliance Canada) / NAMD3 (local) | `supp_files/method_script/1-system_generation/submit-alliancecan.sh`, `submit-local.sh` | Run the MD simulations |
+| **NAMD** | 2.14 / 3.0.1 | `supp_files/method_script/1-system_generation/submit-alliancecan.sh`, `submit-local.sh` | Run the MD simulations |
 | **VMD** | ≥ 1.9.4 | steps 1–3 (invoked as `vmd -dispdev text -e …`) | Trajectory manipulation (centering, atom selection), `psfgen`, and the Density Profile Tool plugin |
 | **psfgen** | bundled with VMD ≥ 1.9.4 | `1-system_generation/build/psfgen.inp` | Combine solutes with the pre-built POPC bilayer into the final PSF/PDB |
-| **VMD Density Profile Tool** (`density_profile.tcl`) | bundled with VMD | `2-system_analysis/membrane_parm_analysis/densityProfiles-*.vmd` | Compute POPC component and water density profiles |
-| **catdcd** | 4.0 (bundled with VMD) | `analysis_per_system.sh`, `get_trajectory.sh` | Concatenate/stride the per-section production DCDs |
-| **Packmol** | ≥ 20 | `1-system_generation/build/packmol-POPC.sh` | Place solutes in the simulation box before assembling the system |
-| **CHARMM-GUI *Membrane Builder*** | output shipped as `1-system_generation/charmm-gui.tgz` | step 1 | Provide the base POPC bilayer system |
-| **PyMOL** | ≥ 2.5 | `figures/scripts/Pymol_scripts/` (`.pml` scenes and their `.py` helpers) | Render the molecular scenes |
+| **VMD Density Profile Tool** (`density_profile.tcl`) | 1.1 (bundled with VMD) | `2-system_analysis/membrane_parm_analysis/densityProfiles-*.vmd` | Compute POPC component and water density profiles |
+| **catdcd** | 5.2 (bundled with VMD) | `analysis_per_system.sh`, `get_trajectory.sh` | Concatenate/stride the per-section production DCDs |
+| **Packmol** | 20.010 | `1-system_generation/build/packmol-POPC.sh` | Place solutes in the simulation box before assembling the system |
+| **CHARMM-GUI *Membrane Builder*** | 3.7 | step 1 (generates `1-system_generation/charmm-gui.tgz`)| Provide the base POPC bilayer system |
+| **PyMOL** | 3.1.0 | `figures/scripts/Pymol_scripts/` (`.pml` scenes and their `.py` helpers) | Render the molecular scenes |
+| **WHAM** | 2.1.1 | `` | Umbrella Sampling free energies calculation |
 
 ### Python
 
-Tested with **Python 3.13.9** (Jupyter notebooks and all `.py` scripts). Python ≥ 3.10 is expected to work.
+Tested with **Python 3.9.18** (Jupyter notebooks and all `.py` scripts). Python ≥ 3.10 is expected to work.
 
 | Package | Version | Used by | Purpose |
 | --- | --- | --- | --- |
-| `numpy` | 2.3.5 | all figure notebooks, all analysis `.py` scripts, `counting_script.ipynb`, `pymol_orient_molecule.py` | Numerical arrays and math |
-| `pandas` | 2.3.3 | all figure notebooks and every `5-postprocessing/**` script | Tabular I/O and aggregation |
-| `matplotlib` | 3.10.6 | all `figures/scripts/*.ipynb` (incl. `matplotlib.ticker`, `matplotlib.lines`, `matplotlib.patches`) | Plot rendering |
-| `scipy` | 1.16.3 | `figures/scripts/FigureS10_plot.ipynb` (`scipy.stats.linregress`); `5-postprocessing/SUPP_membrane_parm/compute_{density,order}_deviation.py` (`scipy.interpolate.interp1d`) | Regression and 1D interpolation |
-| `scikit-learn` | 1.7.2 | `figures/scripts/FigureS10_plot.ipynb` (`LinearRegression`, `mean_squared_error`) | Linear regression diagnostics |
-| `MDAnalysis` | any recent release | `supp_files/method_script/3-distribution_extraction/counting_script.ipynb` | Trajectory parsing and per-frame contact counts (`distance_array`) |
-| `polars` | any recent release | `supp_files/method_script/3-distribution_extraction/counting_script.ipynb` | Fast DataFrame processing of the per-frame contact tables |
-| `jupyter` / `jupyterlab` / `notebook` | 1.1.1 / 4.4.7 / 7.4.5 | all `*.ipynb` files under `figures/scripts/` and `supp_files/method_script/3-distribution_extraction/` | Run the notebooks |
-
-A minimal Python install covering everything is, for example:
-
-```bash
-pip install numpy pandas matplotlib scipy scikit-learn MDAnalysis polars jupyter
-```
-
-Any HPC-specific pieces (SLURM directives in `submit-alliancecan.sh`, the `module load namd-multicore/2.14` line) can be adapted or ignored on a local workstation.
+| `numpy` | 1.26.3 | all figure notebooks, all analysis `.py` scripts, `counting_script.ipynb` | Numerical arrays and math |
+| `pandas` | 2.2.3 | all figure notebooks and every `5-postprocessing/**` script | Tabular I/O and aggregation |
+| `matplotlib` | 3.8.2 | all `figures/scripts/*.ipynb` | Plot rendering |
+| `scipy` | 1.13.1 | `figures/scripts/FigureS10_plot.ipynb` (`scipy.stats.linregress`); `5-postprocessing/SUPP_membrane_parm/compute_{density,order}_deviation.py` (`scipy.interpolate.interp1d`) | Regression and 1D interpolation |
+| `scikit-learn` | 1.3.2 | `figures/scripts/FigureS10_plot.ipynb` (`LinearRegression`, `mean_squared_error`) | Linear regression diagnostics |
+| `MDAnalysis` | 2.7.0 | `supp_files/method_script/3-distribution_extraction/counting_script.ipynb` | Trajectory parsing and per-frame contact counts (`distance_array`) |
+| `polars` | 1.33.1 | `supp_files/method_script/3-distribution_extraction/counting_script.ipynb` | Fast DataFrame processing of the per-frame contact tables |
+| `jupyter` / `jupyterlab` / `notebook` | 1.0.0 / 4.0.9 / 7.0.6 | all `*.ipynb` files under `figures/scripts/` and `supp_files/method_script/3-distribution_extraction/` | Run the notebooks |

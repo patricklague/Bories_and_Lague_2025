@@ -1,0 +1,72 @@
+# colvars.in
+# Two umbrella restraints, applied separately to the two analog copies,
+# along the z-axis of the simulation cell.
+#
+# Reference: center of mass of POPC P atoms (beta = 3.0 in system.pdb).
+# Solute 1 : beta = 1.0 in system.pdb -> restrained at z = __Z1__
+# Solute 2 : beta = 2.0 in system.pdb -> restrained at z = __Z2__
+#
+# Force constant: 3000 kJ/mol/nm^2 = 7.17 kcal/mol/A^2.
+# With colvar width = 1.0 A, the colvars 'forceConstant' equals K (in kcal/mol/A^2).
+
+colvarsTrajFrequency    500       ;# 1 ps   sampling
+colvarsRestartFrequency 25000     ;# 50 ps
+
+# ----------------------------------------------------------------------------
+# colvar 1 : z of analog 1 relative to bilayer center
+# ----------------------------------------------------------------------------
+colvar {
+    name z1
+    width 1.0
+    distanceZ {
+        main {
+            atomsFile      system.pdb
+            atomsCol       B
+            atomsColValue  1.0
+        }
+        ref {
+            atomsFile      system.pdb
+            atomsCol       B
+            atomsColValue  3.0
+        }
+        axis (0.0, 0.0, 1.0)
+    }
+}
+
+# ----------------------------------------------------------------------------
+# colvar 2 : z of analog 2 relative to bilayer center
+# ----------------------------------------------------------------------------
+colvar {
+    name z2
+    width 1.0
+    distanceZ {
+        main {
+            atomsFile      system.pdb
+            atomsCol       B
+            atomsColValue  2.0
+        }
+        ref {
+            atomsFile      system.pdb
+            atomsCol       B
+            atomsColValue  3.0
+        }
+        axis (0.0, 0.0, 1.0)
+    }
+}
+
+# ----------------------------------------------------------------------------
+# umbrella restraints
+# ----------------------------------------------------------------------------
+harmonic {
+    name           umb1
+    colvars        z1
+    centers        __Z1__
+    forceConstant  7.17        ;# 3000 kJ/mol/nm^2 = 7.17 kcal/mol/A^2
+}
+
+harmonic {
+    name           umb2
+    colvars        z2
+    centers        __Z2__
+    forceConstant  7.17
+}

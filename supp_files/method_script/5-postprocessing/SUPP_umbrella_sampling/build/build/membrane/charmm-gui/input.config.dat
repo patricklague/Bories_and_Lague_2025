@@ -1,0 +1,1 @@
+{"systype":"bilayer","dimensions":["46.7504011","46.7504011","145","90.0","90.0","90.0"],"input":["namd"],"forcefield":{"type":"c36m","files":["default"],"custom":[]},"hmr":false}

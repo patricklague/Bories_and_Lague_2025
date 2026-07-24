@@ -1,0 +1,102 @@
+# step6.1_equilibration.namd
+# -- Adapted from CHARMM-GUI step6.1, with the lipid colvar/dihedral
+#    restraints (which require files CHARMM-GUI normally generates at step5
+#    but are not provided here) replaced by a heavy-atom positional restraint
+#    that decreases stepwise through step6.6.
+#
+# stage  6.1 : minimize + 250 ps NVT, dt = 1 fs, K_pos = 10 kcal/mol/A^2
+#              umbrella colvars are ALREADY active so the two solutes are
+#              pinned at their target z throughout the whole equilibration.
+
+structure          system.psf
+coordinates        system.pdb
+
+set temp           303.15
+set outputname     step6.1_eq
+
+# ---- box / PBC (only here -- subsequent steps restart and inherit) ----------
+cellBasisVector1    46.7504011   0.0          0.0
+cellBasisVector2     0.0        46.7504011    0.0
+cellBasisVector3     0.0         0.0        145.0
+cellOrigin           0.0         0.0          0.0
+
+temperature         $temp
+firsttimestep       0
+
+# ---- force field -----------------------------------------------------------
+paraTypeCharmm      on
+set toppar          ../../../toppar
+parameters          $toppar/par_all36m_prot.prm
+parameters          $toppar/par_all36_na.prm
+parameters          $toppar/par_all36_carb.prm
+parameters          $toppar/par_all36_lipid.prm
+parameters          $toppar/par_all36_cgenff.prm
+parameters          $toppar/par_interface.prm
+parameters          $toppar/toppar_water_ions.str
+parameters          $toppar/toppar_all36_lipid_cholesterol.str
+parameters          $toppar/toppar_all36_lipid_bacterial.str
+parameters          $toppar/top_all36_sidechains.str
+
+# ---- nonbonded -------------------------------------------------------------
+exclude             scaled1-4
+1-4scaling          1.0
+switching           on
+vdwForceSwitching   on
+cutoff              12.0
+switchdist          10.0
+pairlistdist        16.0
+stepspercycle       20
+pairlistsPerCycle   2
+
+# ---- integrator ------------------------------------------------------------
+timestep            1.0
+rigidBonds          all
+nonbondedFreq       1
+fullElectFrequency  1
+
+# ---- PME -------------------------------------------------------------------
+PME                 yes
+PMEInterpOrder      6
+PMEGridSpacing      1.0
+
+# ---- thermostat (NVT here) -------------------------------------------------
+# CHARMM-GUI uses Langevin + velocity reassignment during equilibration.
+langevin            on
+langevinDamping     1.0
+langevinTemp        $temp
+langevinHydrogen    off
+reassignFreq        500
+reassignTemp        $temp
+
+wrapAll             on
+wrapWater           on
+wrapNearest         off
+
+# ---- positional restraint (replaces CHARMM-GUI lipid colvar+dihedral) ------
+# ref.pdb has occupancy = 1.0 on heavy atoms of the two solutes and POPC P;
+# constraintScaling = K_pos -> effective force constant = K_pos (kcal/mol/A^2).
+constraints         on
+consref             ref.pdb
+conskfile           ref.pdb
+conskcol            O
+constraintScaling   10.0
+
+# ---- umbrella restraint (active throughout equilibration) ------------------
+colvars             on
+colvarsConfig       colvars.in
+
+# ---- output ----------------------------------------------------------------
+outputName          $outputname
+restartfreq         5000
+dcdfreq             5000
+xstFreq             5000
+outputEnergies      1000
+outputTiming        5000
+binaryOutput        yes
+binaryRestart       yes
+dcdUnitCell         yes
+
+# ---- minimize + 250 ps run -------------------------------------------------
+minimize            10000
+reinitvels          $temp
+run                 250000        ;# 250 ps
