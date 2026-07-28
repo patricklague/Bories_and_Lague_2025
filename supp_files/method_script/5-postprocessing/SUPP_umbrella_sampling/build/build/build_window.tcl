@@ -4,6 +4,8 @@
 #   - Take the equilibrated POPC bilayer (membrane/charmm-gui/namd/step5_input.{psf,pdb})
 #   - Insert two copies of one analog (SCC / SCD / SCR) at z = z1 and z = z1 + 37 A
 #   - Remove waters / ions overlapping with the inserted solutes
+#   - For charged analogs, remove 2 extra counter-ions from the bulk to keep
+#     the window net-neutral: SCD (anionic) -> -2 CLA, SCR (cationic) -> -2 SOD
 #   - Tag atoms in the beta column so colvars can pick them up:
 #        beta = 1.0  -> solute 1  (the one near z1)
 #        beta = 2.0  -> solute 2  (the one near z1 + 37)
@@ -122,6 +124,70 @@ foreach seg [$clash get segname] res [$clash get resid] {
 set clashList [lsort -unique $clashList]
 puts "Removing [llength $clashList] overlapping water/ion residues."
 
+# ion counts BEFORE any deletion, for diagnostics / sanity-check in the log
+set nSOD0 [[atomselect top "resname SOD"] num]
+set nCLA0 [[atomselect top "resname CLA"] num]
+puts "Ion counts before neutralization (post-clash-removal system): SOD=$nSOD0 CLA=$nCLA0"
+
+# ---------------------------------------------------------------------------
+# 5b. charge neutralization
+#     The two inserted analog copies carry a net charge unless ANALOG is the
+#     neutral one (SCC):
+#       SCD (Asp side-chain analog, e.g. acetate)      -> -1 e each -> -2 e total
+#       SCR (Arg side-chain analog, e.g. methylguanidinium) -> +1 e each -> +2 e total
+#     Remove 2 counter-ions of the appropriate sign (not already scheduled
+#     for removal by the clash step above) so the whole window stays net
+#     neutral, exactly as in the reference membrane system. Pick the 2 ions
+#     farthest (in 3-D) from both solutes so the correction is made in bulk
+#     solvent, away from the region that matters for the PMF.
+# ---------------------------------------------------------------------------
+set neutralResname ""
+if { $ANALOG eq "SCD" } {
+    set neutralResname "CLA"
+} elseif { $ANALOG eq "SCR" } {
+    set neutralResname "SOD"
+}
+
+if { $neutralResname ne "" } {
+    set pool [atomselect top "resname $neutralResname"]
+    set poolList {}
+    foreach seg [$pool get segname] res [$pool get resid] {
+        lappend poolList [list $seg $res]
+    }
+    $pool delete
+    set poolList [lsort -unique $poolList]
+
+    set an1com [measure center [atomselect top "segname AN1"] weight none]
+    set an2com [measure center [atomselect top "segname AN2"] weight none]
+
+    set distList {}
+    foreach pair $poolList {
+        if { [lsearch -exact $clashList $pair] != -1 } {
+            continue
+        }
+        set seg [lindex $pair 0]
+        set res [lindex $pair 1]
+        set ionsel [atomselect top "segname $seg and resid $res"]
+        set ioncom [measure center $ionsel weight none]
+        $ionsel delete
+        set d1 [veclength [vecsub $ioncom $an1com]]
+        set d2 [veclength [vecsub $ioncom $an2com]]
+        set dmin [expr {$d1 < $d2 ? $d1 : $d2}]
+        lappend distList [list $dmin $seg $res]
+    }
+    set distList [lsort -real -decreasing -index 0 $distList]
+
+    if { [llength $distList] < 2 } {
+        puts "WARNING: only [llength $distList] $neutralResname ion(s) available for neutralization (need 2)."
+    }
+
+    set toRemove [lrange $distList 0 1]
+    puts "Removing [llength $toRemove] $neutralResname ion(s) to neutralize the charge introduced by $ANALOG."
+    foreach entry $toRemove {
+        lappend clashList [list [lindex $entry 1] [lindex $entry 2]]
+    }
+}
+
 mol delete top
 
 foreach pair $clashList {
@@ -140,6 +206,13 @@ writepdb $OUTDIR/system.pdb
 # ---------------------------------------------------------------------------
 mol new     $OUTDIR/system.psf type psf waitfor all
 mol addfile $OUTDIR/system.pdb type pdb waitfor all
+
+# report ion counts as ACTUALLY written to disk, so the neutralization step
+# can be verified directly against system.psf/pdb rather than trusting the
+# in-memory bookkeeping from step 5b above.
+set nSODf [[atomselect top "resname SOD"] num]
+set nCLAf [[atomselect top "resname CLA"] num]
+puts "Ion counts in written system.psf/system.pdb: SOD=$nSODf CLA=$nCLAf"
 
 set all [atomselect top "all"]
 $all set beta 0.0
