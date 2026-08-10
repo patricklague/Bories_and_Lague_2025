@@ -2,20 +2,28 @@
 """
 get_pmf.py
 
-Take the WHAM metadata produced by extract_metadata.py and write
-    <out-dir>/pmf_s1.dat   per-solute WHAM PMF (z, PMF, ...)
-    <out-dir>/pmf_s2.dat
+Take the WHAM metadata produced by extract_metadata.py for three
+independent 50 ns blocks of trajectory data (section101-section150,
+section151-section200, section201-section250) and write, per block,
+    <in-dir>/<block>/pmf_s1.dat        per-solute WHAM PMF (z, PMF, ...)
+    <in-dir>/<block>/pmf_s2.dat
+    <in-dir>/<block>/pmf-us-<analog>-<block>.dat
+                                       block PMF (leaflets folded together)
+and, combined over the three blocks,
     <out-dir>/pmf-us-<analog>.dat
-        |z|(A)   PMF(kcal/mol)   SE(kcal/mol)   n_leaflets
+        |z|(A)   PMF(kcal/mol)   SE(kcal/mol)   n_blocks
 
-The combined PMF follows the ALC-2007 / MacCallum et al. two-leaflet
-treatment used by our simulations:
-    solute 1 samples the +z leaflet, with centers 0..+37 A
-    solute 2 samples the -z leaflet, with centers -37..0 A
+Within each block, solute 1 (+z leaflet, centers 0..+37 A) and solute 2
+(-z leaflet, centers -37..0 A) are run through WHAM separately, then the
+solute-2 profile is mirrored to |z| and averaged with the solute-1 profile
+(ALC-2007 / MacCallum et al. two-leaflet treatment). This gives one PMF
+estimate per 50 ns block.
 
-After WHAM is run separately for solute 1 and solute 2, the solute-2 PMF is
-mirrored to |z| and averaged with the solute-1 PMF. The uncertainty is the
-standard error between the available leaflet estimates, i.e. std/sqrt(n).
+The final PMF average and standard error are computed *across the three
+blocks* (std/sqrt(n), n up to 3), which treats each 50 ns block as an
+independent replicate. See get_pmf2.py for the alternative approach (single
+50 ns block, error estimated from the two leaflets) used for shorter
+(100 ns) trajectories.
 
 By default WHAM uses 200 bins across HIST_MIN..HIST_MAX. With the default
 range -38..38 A, this gives a bin width of 0.38 A. You can override either
@@ -201,15 +209,19 @@ def fold_side(zside: np.ndarray, gside: np.ndarray,
                      left=np.nan, right=np.nan)
 
 
-def combine_pmf(p1: Path, p2: Path, out: Path, analog: str, z_bulk: float,
-                bin_width: float
-                ) -> int:
+def combine_leaflets(p1: Path, p2: Path, out: Path, analog: str, block: str,
+                     z_bulk: float, bin_width: float
+                     ) -> tuple[np.ndarray, np.ndarray]:
     """Combine the two offset solutes with the ALC-2007 leaflet method.
 
     In our setup solute 1 is restrained at 0..+37 A and solute 2 at -37..0 A.
     The two WHAM profiles are therefore independent estimates of the same
-    |z|-PMF from opposite leaflets. We mirror solute 2 onto the positive grid,
-    average the two estimates, and report SE from their asymmetry.
+    |z|-PMF from opposite leaflets for one 50 ns block. We mirror solute 2
+    onto the positive grid and average the two estimates into a single
+    per-block PMF (returned for later averaging across blocks). The
+    leaflet-to-leaflet spread is written to `out` for diagnostic purposes
+    only; the reported uncertainty of the final PMF comes from the
+    block-to-block spread (see combine_blocks).
     """
     z1, g1 = load_pmf(p1)
     z2, g2 = load_pmf(p2)
@@ -248,12 +260,41 @@ def combine_pmf(p1: Path, p2: Path, out: Path, analog: str, z_bulk: float,
     mean   = mean - ref
 
     with open(out, "w") as fh:
-        fh.write(f"# PMF for analog '{analog}'  "
+        fh.write(f"# PMF for analog '{analog}', block '{block}' "
              f"(ALC-2007 two-leaflet averaging, {bin_width:g} A bins)\n")
         fh.write("# columns: |z|(A)   PMF(kcal/mol)   SE(kcal/mol)   n_leaflets\n")
         fh.write(f"# zeroed on |z| >= {z_bulk:g} A; SE = std/sqrt(n)\n")
         fh.write("# leaflet estimates: solute 1 (+z) and mirrored solute 2 (-z)\n")
+        fh.write("# diagnostic only -- final uncertainty comes from block-to-block spread\n")
         for zi, gi, si, ni in zip(zp, mean, se, n):
+            fh.write(f"{zi:8.3f} {gi:12.5f} {si:12.5f} {int(ni):4d}\n")
+    return zp, mean
+
+
+def combine_blocks(z: np.ndarray, block_means: list[np.ndarray],
+                   block_names: list[str], out: Path, analog: str
+                   ) -> int:
+    """Average the per-block (leaflet-folded) PMFs and estimate the
+    standard error from the spread between the 50 ns blocks.
+    """
+    stack = np.vstack(block_means)                          # nblocks x nbin
+    n = np.sum(np.isfinite(stack), axis=0)
+    with np.errstate(invalid="ignore"):
+        mean = np.divide(np.nansum(stack, axis=0), n,
+                         out=np.full(z.shape, np.nan, dtype=float),
+                         where=n > 0)
+    with np.errstate(invalid="ignore"):
+        std = np.where(n >= 2, np.nanstd(stack, axis=0, ddof=1), np.nan)
+    se = std / np.sqrt(np.maximum(n, 1))
+
+    with open(out, "w") as fh:
+        fh.write(f"# PMF for analog '{analog}'  "
+                 f"(averaged over {len(block_names)} 50 ns blocks: "
+                 f"{', '.join(block_names)})\n")
+        fh.write("# columns: |z|(A)   PMF(kcal/mol)   SE(kcal/mol)   n_blocks\n")
+        fh.write("# each block PMF folds solute 1 (+z) and mirrored solute 2 (-z) leaflets;\n")
+        fh.write("# SE here = std/sqrt(n) across blocks\n")
+        for zi, gi, si, ni in zip(z, mean, se, n):
             fh.write(f"{zi:8.3f} {gi:12.5f} {si:12.5f} {int(ni):4d}\n")
     return int(np.isfinite(mean).sum())
 
@@ -263,8 +304,17 @@ def main() -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--analog",   required=True)
     ap.add_argument("--in-dir",   required=True, type=Path,
-                    help="directory with metadata_s1.dat and metadata_s2.dat")
-    ap.add_argument("--out-dir",  required=True, type=Path)
+                    help="parent directory containing one subdirectory per "
+                         "50 ns block (see --blocks), each with "
+                         "metadata_s1.dat/metadata_s2.dat from extract_metadata.py")
+    ap.add_argument("--out-dir",  type=Path, default=None,
+                    help="where to write the combined pmf-us-<analog>.dat "
+                         "(default: same as --in-dir)")
+    ap.add_argument("--blocks", nargs="+",
+                    default=["block1", "block2", "block3"],
+                    help="block subdirectory names under --in-dir, in order "
+                         "(default: block1 block2 block3, matching "
+                         "section101-150 / section151-200 / section201-250)")
     ap.add_argument("--backend", choices=["python", "grossfield"],
                     default="python",
                     help="WHAM implementation (default: python, no external dep)")
@@ -284,13 +334,8 @@ def main() -> int:
     ap.add_argument("--seed",     type=int,   default=DEFAULT_SEED)
     args = ap.parse_args()
 
-    meta1 = args.in_dir / "metadata_s1.dat"
-    meta2 = args.in_dir / "metadata_s2.dat"
-    for m in (meta1, meta2):
-        if not m.is_file() or m.stat().st_size == 0:
-            sys.exit(f"ERROR: {m} missing or empty -- run extract_metadata.py")
-
-    args.out_dir.mkdir(parents=True, exist_ok=True)
+    out_dir = args.out_dir or args.in_dir
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     hist_range = args.hist_max - args.hist_min
     if hist_range <= 0:
@@ -306,33 +351,60 @@ def main() -> int:
         nbins = args.num_bins
         bin_width = hist_range / nbins
 
-    pmf1 = args.out_dir / "pmf_s1.dat"
-    pmf2 = args.out_dir / "pmf_s2.dat"
-    log1 = args.out_dir / "wham_s1.log"
-    log2 = args.out_dir / "wham_s2.log"
+    block_z: np.ndarray | None = None
+    block_means: list[np.ndarray] = []
+    used_blocks: list[str] = []
+    for block in args.blocks:
+        block_dir = args.in_dir / block
+        meta1 = block_dir / "metadata_s1.dat"
+        meta2 = block_dir / "metadata_s2.dat"
+        missing = [m for m in (meta1, meta2) if not m.is_file() or m.stat().st_size == 0]
+        if missing:
+            print(f"  ! block '{block}': missing/empty metadata "
+                  f"({', '.join(str(m) for m in missing)}), skipped")
+            continue
 
-    print(f"  WHAM s1: bins={nbins} ({bin_width:g} A) "
-          f"range=[{args.hist_min},{args.hist_max}]  T={args.temp}  "
-          f"backend={args.backend}")
-    if args.backend == "python":
-        wham_py(meta1, pmf1, log1, args.hist_min, args.hist_max, nbins,
-                args.temp, args.tol)
-        print(f"  WHAM s2: bins={nbins}")
-        wham_py(meta2, pmf2, log2, args.hist_min, args.hist_max, nbins,
-                args.temp, args.tol)
-    else:
-        run_wham(args.wham_bin, args.hist_min, args.hist_max, nbins, args.tol,
-                 args.temp, args.num_pad, meta1, pmf1, log1, args.nboot, args.seed)
-        print(f"  WHAM s2: bins={nbins}")
-        run_wham(args.wham_bin, args.hist_min, args.hist_max, nbins, args.tol,
-                 args.temp, args.num_pad, meta2, pmf2, log2, args.nboot, args.seed)
+        pmf1 = block_dir / "pmf_s1.dat"
+        pmf2 = block_dir / "pmf_s2.dat"
+        log1 = block_dir / "wham_s1.log"
+        log2 = block_dir / "wham_s2.log"
 
-    combined = args.out_dir / f"pmf-us-{args.analog}.dat"
-    nbin_ok = combine_pmf(pmf1, pmf2, combined, args.analog, args.z_bulk,
-                          bin_width)
-    print(f"==> {combined}   ({nbin_ok} usable bins)")
+        print(f"  [{block}] WHAM s1: bins={nbins} ({bin_width:g} A) "
+              f"range=[{args.hist_min},{args.hist_max}]  T={args.temp}  "
+              f"backend={args.backend}")
+        if args.backend == "python":
+            wham_py(meta1, pmf1, log1, args.hist_min, args.hist_max, nbins,
+                    args.temp, args.tol)
+            print(f"  [{block}] WHAM s2: bins={nbins}")
+            wham_py(meta2, pmf2, log2, args.hist_min, args.hist_max, nbins,
+                    args.temp, args.tol)
+        else:
+            run_wham(args.wham_bin, args.hist_min, args.hist_max, nbins, args.tol,
+                     args.temp, args.num_pad, meta1, pmf1, log1, args.nboot, args.seed)
+            print(f"  [{block}] WHAM s2: bins={nbins}")
+            run_wham(args.wham_bin, args.hist_min, args.hist_max, nbins, args.tol,
+                     args.temp, args.num_pad, meta2, pmf2, log2, args.nboot, args.seed)
+
+        block_pmf = block_dir / f"pmf-us-{args.analog}-{block}.dat"
+        zp, mean = combine_leaflets(pmf1, pmf2, block_pmf, args.analog, block,
+                                    args.z_bulk, bin_width)
+        if block_z is None:
+            block_z = zp
+        elif not np.allclose(block_z, zp):
+            sys.exit(f"ERROR: block '{block}' PMF grid differs from earlier blocks")
+        block_means.append(mean)
+        used_blocks.append(block)
+        print(f"  [{block}] -> {block_pmf}")
+
+    if not block_means:
+        sys.exit("ERROR: no usable blocks found under " + str(args.in_dir))
+
+    combined = out_dir / f"pmf-us-{args.analog}.dat"
+    nbin_ok = combine_blocks(block_z, block_means, used_blocks, combined, args.analog)
+    print(f"==> {combined}   ({nbin_ok} usable bins, {len(used_blocks)} blocks)")
     return 0
 
 
 if __name__ == "__main__":
     sys.exit(main())
+

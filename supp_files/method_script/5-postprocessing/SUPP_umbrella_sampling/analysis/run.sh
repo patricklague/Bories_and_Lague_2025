@@ -3,37 +3,47 @@
 # run.sh
 #
 # Orchestrate PMF extraction for every analog under ../runs/.
-# For each analog:
+# For each analog, and for each of three independent 50 ns blocks
+# (section101-150, section151-200, section201-250):
 #   1) extract_metadata.py  -> per-window z(t) time series + WHAM metadata
-#   2) get_pmf.py           -> Grossfield WHAM x2 + Allen-2007 4-sample PMF
+#      for that block, in <out-dir>/<analog>/<block>/
+# then, once per analog:
+#   2) get_pmf.py           -> WHAM per block (leaflets folded together),
+#      averaged over the three blocks. The reported standard error comes
+#      from the block-to-block spread, not from the two leaflets.
+#
+# See run2.sh for the alternative single-block (100 ns trajectory, last
+# 50 ns) pipeline using get_pmf2.py, where the SE instead comes from the
+# difference between the two leaflets.
 #
 # Usage:
 #   bash run.sh                 # all analogs found in ../runs/
-#   bash run.sh scc             # one analog
-#   bash run.sh scc scd scf     # several
+#   bash run.sh scc              # one analog
+#   bash run.sh scc scd scf      # several
 #
 # Optional environment overrides:
 #   PYTHON       python interpreter   (default: python3)
 #   WHAM_BIN     Grossfield wham bin  (default: wham)
-#   EQUIL_PS     ps to discard/window (default: 5000)
+#   EQUIL_PS     ps to discard/block  (default: 0; blocks already start past
+#                                       equilibration)
 #   NBOOT        WHAM bootstrap rounds (default: 0)
-#   MIN_SECTION  lowest section index to include  (default: 1)
-#   MAX_SECTION  highest section index to include (default: no limit)
 
 set -euo pipefail
 
 #HERE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 HERE="./"
-ROOT="../"
+ROOT="/media/bories/Backup_large/bories/Documents/Travail/umbrella/"
 
 RUNS="${RUNS:-$ROOT/runs}"
 OUT_ROOT="${OUT_ROOT:-$HERE/pmf}"
 PYTHON="${PYTHON:-python3}"
 WHAM_BIN="${WHAM_BIN:-wham}"
-EQUIL_PS="${EQUIL_PS:-5000}"
+EQUIL_PS="${EQUIL_PS:-0}"
 NBOOT="${NBOOT:-0}"
-MIN_SECTION=100
-MAX_SECTION=250
+
+# Three independent 50 ns blocks: name -> "min-section max-section"
+BLOCK_NAMES=(block1 block2 block3)
+BLOCK_RANGES=("101 150" "151 200" "201 250")
 
 ANALOGS=()
 if [ $# -ge 1 ]; then
@@ -60,25 +70,29 @@ for a in "${ANALOGS[@]}"; do
     OUT_DIR="$OUT_ROOT/$a"
     mkdir -p "$OUT_DIR"
 
-    EXTRA_EXTRACT_ARGS=(--min-section "$MIN_SECTION")
-    if [ -n "$MAX_SECTION" ]; then
-        EXTRA_EXTRACT_ARGS+=(--max-section "$MAX_SECTION")
-    fi
+    for i in "${!BLOCK_NAMES[@]}"; do
+        block="${BLOCK_NAMES[$i]}"
+        read -r min_section max_section <<< "${BLOCK_RANGES[$i]}"
+        echo "-- $a / $block (section$min_section-section$max_section) --"
 
-    "$PYTHON" "$HERE/extract_metadata.py" \
-        --analog   "$a"                   \
-        --runs-dir "$RUNS"                \
-        --out-dir  "$OUT_DIR"             \
-        --equil-ps "$EQUIL_PS"            \
-        "${EXTRA_EXTRACT_ARGS[@]}"
+        "$PYTHON" "$HERE/extract_metadata.py"     \
+            --analog       "$a"                   \
+            --runs-dir     "$RUNS"                \
+            --out-dir      "$OUT_DIR/$block"       \
+            --equil-ps     "$EQUIL_PS"             \
+            --min-section  "$min_section"          \
+            --max-section  "$max_section"
+    done
 
     "$PYTHON" "$HERE/get_pmf.py"          \
         --analog   "$a"                   \
         --in-dir   "$OUT_DIR"             \
         --out-dir  "$OUT_DIR"             \
+        --blocks   "${BLOCK_NAMES[@]}"     \
         --wham-bin "$WHAM_BIN"            \
         --nboot    "$NBOOT"
 done
 
 echo
 echo "Done. PMFs in $OUT_ROOT/<analog>/pmf-us-<analog>.dat"
+
