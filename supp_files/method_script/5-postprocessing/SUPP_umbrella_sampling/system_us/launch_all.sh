@@ -15,7 +15,7 @@ set -euo pipefail
 
 HERE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 RUNS_DIR="$HERE/runs"
-ANALOGS=(scl)
+ANALOGS=(scc)
 
 WINDOWS=()
 for i in $(seq 0 37); do WINDOWS+=($(printf "%02d" "$i")); done

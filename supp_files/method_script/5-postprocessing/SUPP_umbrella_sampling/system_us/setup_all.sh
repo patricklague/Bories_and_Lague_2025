@@ -49,7 +49,7 @@ mkdir -p "$TOPPAR_DIR"
 # ---------------------------------------------------------------------------
 # 2. window definitions
 # ---------------------------------------------------------------------------
-ANALOGS=("SCL" "SCC" "SCY" "SCS" "SCR" "SCD")
+ANALOGS=("SCC" "SCS" "SCY" "SCD")
 
 NWIN=38
 DZ_PAIR=-37.0         # solute 2 is 3.7 nm BELOW solute 1 along z

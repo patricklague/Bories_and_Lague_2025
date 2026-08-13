@@ -11,6 +11,8 @@
 #   __INPUTNAME__  -> e.g. "out/restart"
 #   __OUTPUTNAME__ -> e.g. "out/section1"
 
+GPUresident        on
+
 structure          system.psf
 coordinates        system.pdb
 
