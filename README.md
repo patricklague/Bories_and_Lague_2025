@@ -25,7 +25,8 @@ Data, scripts, and outputs for all figures in the article.
   - `aromatics_orientation/` — ring-orientation raw data, per-trajectory `vector_orientations/`, and the aggregated `freq_angle_<aa>.dat` 2D histograms
   - `SUPP_membrane_parm/` — per-analog `thickness/`, `area_per_lipid/`, `order_parameter/`, `densityProfiles/` tables and the top-level `computed_*.csv` summaries
   - `SUPP_monomer/` — `monomer_rates_45A_9batches.dat` (mean ± std monomer/multimer rates)
-  - `SUPP_hydrophobicity/`, `extra_analysis/` — auxiliary tables for the supplementary figures
+  - `SUPP_hydrophobicity/` — auxiliary tables for the supplementary figures
+  - `SUPP_umbrella_sampling/` — pmfs obtained using umbrella sampling
 - **scripts/** — Jupyter notebooks that generate the figures (`PMF_plots.ipynb`, `density_popc_plot.ipynb`, `pKa_plot.ipynb`, `aromatics_orientation_plots.ipynb`, `SUPP_Membrane_parm.ipynb`, `SUPP_monomer_plots.ipynb`, `SUPP_hydrophobicity_plots.ipynb`, `SUPP_aromatics_orientation_plots.ipynb`) plus helper scripts under `aromatics_orientation/` and PyMOL scripts under `pymol/`
 - **plot/** — Output figure files (PNG)
 - **draw/** — Hand-drawn figures (Pages files for article and abstract figures, ring orientation diagrams)
@@ -45,7 +46,7 @@ Supplementary files: simulation inputs, outputs, parameters, and method scripts.
   2. `2-system_analysis/` — Trajectory analysis split into `membrane_parm_analysis/` (centering, cell dimensions, thickness, density profiles, deuterium order parameters; supports the 401-600/601-800/801-1000 ns batch split) and `aromatic_analysis/` (per-trajectory ring-orientation CSVs and aggregated 2D depth/angle histograms for SCF/SCY/SCW)
   3. `3-distribution_extraction/` — Extract solute z-density distributions and identify monomers via the 4.5 Å contact cutoff
   4. `4-pmf_calculation/` — Compute potentials of mean force from the distributions
-  5. `5-postprocessing/` — helper scripts to extract output frames (`get_last_frames.sh`, `get_frame.tcl`), `SUPP_membrane_parm/` per-parameter `run.sh` extractors that write into `figures/data/SUPP_membrane_parm/`, and the top-level `compute_*.py` aggregators that produce the `computed_*.csv` summaries; also contains `SUPP_monomer/monomer_rate.py` (writes `monomer_rates_45A_9batches.dat`)
+  5. `5-postprocessing/` — helper scripts to extract output frames (`get_last_frames.sh`, `get_frame.tcl`), `SUPP_membrane_parm/` per-parameter `run.sh` extractors that write into `figures/data/SUPP_membrane_parm/`, and the top-level `compute_*.py` aggregators that produce the `computed_*.csv` summaries; also contains `SUPP_monomer/monomer_rate.py` (writes `monomer_rates_45A_9batches.dat`); also contains `SUPP_umbrella_sampling/system_us/` to conduct umbrella sampling simulations and `analysis/` to produce pmfs.
 
 The dependencies required to re-run the analysis pipeline (NAMD, VMD, Packmol, …) are listed in the [Dependencies](#dependencies) section below.
 
@@ -59,7 +60,7 @@ The versions listed below are the ones actually used to produce the published da
 
 | Tool | Version | Used by | Purpose |
 | --- | --- | --- | --- |
-| **NAMD** | 2.14 / 3.0.1 | `supp_files/method_script/1-system_generation/submit-alliancecan.sh`, `submit-local.sh` | Run the MD simulations |
+| **NAMD** | 2.14 / 3.0.2 | `supp_files/method_script/1-system_generation/submit-alliancecan.sh`, `submit-local.sh` | Run the MD simulations |
 | **VMD** | ≥ 1.9.4 | steps 1–3 (invoked as `vmd -dispdev text -e …`) | Trajectory manipulation (centering, atom selection), `psfgen`, and the Density Profile Tool plugin |
 | **psfgen** | bundled with VMD ≥ 1.9.4 | `1-system_generation/build/psfgen.inp` | Combine solutes with the pre-built POPC bilayer into the final PSF/PDB |
 | **VMD Density Profile Tool** (`density_profile.tcl`) | 1.1 (bundled with VMD) | `2-system_analysis/membrane_parm_analysis/densityProfiles-*.vmd` | Compute POPC component and water density profiles |

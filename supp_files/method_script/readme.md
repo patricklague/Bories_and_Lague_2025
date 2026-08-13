@@ -96,6 +96,7 @@ Once the raw contact files are produced, `raw_to_distribution.py` bins them into
 - `SUPP_membrane_parm/` — Per-system extraction and aggregation scripts that turn the raw `analysis_per_system.sh` outputs into the canonical `figures/data/SUPP_membrane_parm/` tables.
   - `thickness/`, `area_per_lipid/`, `order_parameter/`, `densityProfiles/` each contain a `run.sh` driver and a `get_*.py` extractor that merge the three per-trajectory raw files into a single per-analog `<aa>-<param>.dat`. Each `run.sh` keeps the original local source path as the active `DIR=...` and exposes a commented reviewer-facing alternative pointing at `../../../../results/POPC-aa/POPC-$aa/`. The merged file is moved to `figures/data/SUPP_membrane_parm/<subdir>/`.
   - `compute_thickness.py`, `compute_apl.py`, `compute_acm.py`, `compute_density_deviation.py`, `compute_order_deviation.py` — top-level aggregators that read the per-analog tables under `figures/data/SUPP_membrane_parm/<subdir>/` and produce the `computed_*.csv` summary files used by the figure notebooks.
+- `SUPP_umbrella_sampling/` — ...
 
 All scripts in this step apply the canonical naming conventions defined in `correctives/list_of_script.md` and emit headers compatible with `correctives/fix_header.py` so that no post-hoc header rewriting is needed.
 
