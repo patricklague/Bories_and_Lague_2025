@@ -32,8 +32,8 @@
 
 set -euo pipefail
 
-HERE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-ROOT="${ROOT:-/media/bories/Backup_large/bories/Documents/Travail/umbrella}"
+HERE="${HERE:-../../../../../figures/data/SUPP_umbrella_sampling/}"
+ROOT="${ROOT:-../system_us/}"
 
 RUNS="${RUNS:-$ROOT/runs}"
 OUT_ROOT="${OUT_ROOT:-$HERE/pmf}"

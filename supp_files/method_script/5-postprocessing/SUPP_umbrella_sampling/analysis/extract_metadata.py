@@ -63,7 +63,11 @@ DEFAULT_DZ_STEP     = 1.0      # Z1 spacing between windows (A)
 DEFAULT_DZ_PAIR     = -37.0    # Z2 = Z1 + DZ_PAIR
 DEFAULT_Z_MIN       = 0.0      # window 00 -> Z1 = 0
 DEFAULT_FRAME_DT_PS = 10.0     # dcdfreq=5000, timestep=2 fs -> 10 ps/frame
+<<<<<<< Updated upstream
 DEFAULT_MAX_STEP_A  = 2.0      # restrained coordinate continuity check
+=======
+DEFAULT_MAX_STEP_A  = 4.0      # restrained coordinate continuity check
+>>>>>>> Stashed changes
 
 
 def numeric_key(path: str) -> int:
