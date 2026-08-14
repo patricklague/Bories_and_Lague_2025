@@ -52,7 +52,7 @@ DEFAULT_TOL      = 1.0e-5
 DEFAULT_TEMP     = 303.15
 DEFAULT_NUM_PAD  = 0
 DEFAULT_SEED     = 12345
-DEFAULT_Z_BULK   = 30.0    # |z| >= Z_BULK averaged to zero the PMF
+DEFAULT_Z_BULK   = 35.0    # |z| >= Z_BULK averaged to zero the PMF
 DEFAULT_MAX_ITER = 100000  # safety cap for the python WHAM iteration
 KB_KCAL          = 0.0019872041   # Boltzmann constant in kcal/(mol K)
 
@@ -111,8 +111,21 @@ def wham_py(meta: Path, pmf: Path, log: Path,
         H[i] = h
         n[i] = h.sum()
 
+    if nwin != 38:
+        raise RuntimeError(f"expected 38 umbrella windows, found {nwin} in {meta}")
+    if np.any(n == 0):
+        empty = ", ".join(str(i) for i in np.where(n == 0)[0])
+        raise RuntimeError(f"empty/out-of-range umbrella windows in {meta}: {empty}")
     if n.sum() == 0:
         raise RuntimeError(f"no samples landed in [{hist_min},{hist_max}]")
+
+    normalized = H / n[:, None]
+    adjacent_overlap = np.minimum(normalized[:-1], normalized[1:]).sum(axis=1)
+    if np.any(adjacent_overlap == 0):
+        pairs = ", ".join(
+            f"{i}-{i + 1}" for i in np.where(adjacent_overlap == 0)[0]
+        )
+        raise RuntimeError(f"zero histogram overlap between windows {pairs} in {meta}")
 
     # bias matrix U_ik = (1/2) K_i (x_k - x0_i)^2 ;  W = exp(-U/kT)
     U = 0.5 * kvals[:, None] * (x[None, :] - centers[:, None]) ** 2
@@ -130,6 +143,9 @@ def wham_py(meta: Path, pmf: Path, log: Path,
         flog.write(f"# python WHAM  T={temp}  bins={nbins}  "
                    f"range=[{hist_min},{hist_max}]  tol={tol}\n")
         flog.write(f"# {nwin} windows, total counts = {n.sum():.0f}\n")
+        flog.write(f"# adjacent overlap: min={adjacent_overlap.min():.4f} "
+               f"median={np.median(adjacent_overlap):.4f}\n")
+        converged = False
         for it in range(1, max_iter + 1):
             # rho_k = sum_i H_ik  /  sum_i n_i exp(F_i) W_ik
             denom = (n * np.exp(F))[:, None] * W            # (nwin, nbins)
@@ -148,9 +164,13 @@ def wham_py(meta: Path, pmf: Path, log: Path,
                 flog.write(f"  iter {it:6d}  max|dF| = {diff:.3e}\n")
             if np.isfinite(diff) and diff < tol:
                 flog.write(f"# converged in {it} iterations\n")
+                converged = True
                 break
         else:
             flog.write(f"# WARNING: not converged after {max_iter} iterations\n")
+
+    if not converged:
+        raise RuntimeError(f"WHAM did not converge for {meta} after {max_iter} iterations")
 
     g = np.where(rho > 0, -kT * np.log(np.where(rho > 0, rho, np.nan)), np.nan)
     if np.isfinite(g).any():

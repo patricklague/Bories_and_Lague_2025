@@ -3,7 +3,7 @@
 # run.sh
 #
 # Orchestrate PMF extraction for every analog under ../runs/.
-# For each analog, and for each of three independent 50 ns blocks
+# For each analog, and for each of three non-overlapping 50 ns blocks
 # (section101-150, section151-200, section201-250):
 #   1) extract_metadata.py  -> per-window z(t) time series + WHAM metadata
 #      for that block, in <out-dir>/<analog>/<block>/
@@ -23,25 +23,27 @@
 #
 # Optional environment overrides:
 #   PYTHON       python interpreter   (default: python3)
-#   WHAM_BIN     Grossfield wham bin  (default: wham)
+#   WHAM_BACKEND python or grossfield (default: python)
+#   WHAM_BIN     Grossfield wham bin  (default: wham; used only when
+#                                      WHAM_BACKEND=grossfield)
 #   EQUIL_PS     ps to discard/block  (default: 0; blocks already start past
 #                                       equilibration)
 #   NBOOT        WHAM bootstrap rounds (default: 0)
 
 set -euo pipefail
 
-#HERE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-HERE="./"
-ROOT="/media/bories/Backup_large/bories/Documents/Travail/umbrella/"
+HERE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+ROOT="${ROOT:-/media/bories/Backup_large/bories/Documents/Travail/umbrella}"
 
 RUNS="${RUNS:-$ROOT/runs}"
 OUT_ROOT="${OUT_ROOT:-$HERE/pmf}"
 PYTHON="${PYTHON:-python3}"
 WHAM_BIN="${WHAM_BIN:-wham}"
+WHAM_BACKEND="${WHAM_BACKEND:-python}"
 EQUIL_PS="${EQUIL_PS:-0}"
 NBOOT="${NBOOT:-0}"
 
-# Three independent 50 ns blocks: name -> "min-section max-section"
+# Three contiguous, non-overlapping 50 ns blocks: name -> "min-section max-section"
 BLOCK_NAMES=(block1 block2 block3)
 BLOCK_RANGES=("101 150" "151 200" "201 250")
 
@@ -89,6 +91,7 @@ for a in "${ANALOGS[@]}"; do
         --in-dir   "$OUT_DIR"             \
         --out-dir  "$OUT_DIR"             \
         --blocks   "${BLOCK_NAMES[@]}"     \
+        --backend  "$WHAM_BACKEND"         \
         --wham-bin "$WHAM_BIN"            \
         --nboot    "$NBOOT"
 done

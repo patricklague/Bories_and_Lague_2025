@@ -63,6 +63,7 @@ DEFAULT_DZ_STEP     = 1.0      # Z1 spacing between windows (A)
 DEFAULT_DZ_PAIR     = -37.0    # Z2 = Z1 + DZ_PAIR
 DEFAULT_Z_MIN       = 0.0      # window 00 -> Z1 = 0
 DEFAULT_FRAME_DT_PS = 10.0     # dcdfreq=5000, timestep=2 fs -> 10 ps/frame
+DEFAULT_MAX_STEP_A  = 2.0      # restrained coordinate continuity check
 
 
 def numeric_key(path: str) -> int:
@@ -118,6 +119,18 @@ def select_indices(pdb: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     return s1, s2, ref
 
 
+def periodic_com_z(group, box_z: float) -> float:
+    """Mass-weighted z center after unwrapping atoms around one group atom."""
+    z = group.positions[:, 2].astype(float)
+    masses = group.masses.astype(float)
+    if not np.isfinite(box_z) or box_z <= 0:
+        return float(np.average(z, weights=masses))
+    anchor = z[0]
+    dz = z - anchor
+    dz -= box_z * np.round(dz / box_z)
+    return float(anchor + np.average(dz, weights=masses))
+
+
 def extract_window(win_dir: Path, frame_dt_ps: float, skip_frames: int,
                    min_section: int = 1, max_section: int | None = None
                    ) -> tuple[np.ndarray, np.ndarray, np.ndarray] | None:
@@ -139,9 +152,12 @@ def extract_window(win_dir: Path, frame_dt_ps: float, skip_frames: int,
     z1, z2 = [], []
     for ts in u.trajectory:
         Lz = ts.dimensions[2] if ts.dimensions is not None else 0.0
-        zr  = ref.center_of_mass()[2]
-        z1f = sol1.center_of_mass()[2] - zr
-        z2f = sol2.center_of_mass()[2] - zr
+        # DCD coordinates were written with wrapAll on. A direct COM of the
+        # wrapped POPC-P atoms can jump by several Angstrom when the bilayer
+        # straddles a periodic boundary. Unwrap each group locally first.
+        zr  = periodic_com_z(ref, Lz)
+        z1f = periodic_com_z(sol1, Lz) - zr
+        z2f = periodic_com_z(sol2, Lz) - zr
         # Keep the solute-reference distance in the nearest periodic image.
         # This avoids jumps when a solute crosses the periodic z boundary.
         if Lz > 0:                                      # minimum-image
@@ -167,6 +183,9 @@ def main() -> int:
                     help="ps of production to discard per window (default 5000)")
     ap.add_argument("--frame-dt-ps", type=float, default=DEFAULT_FRAME_DT_PS,
                     help="time between consecutive dcd frames (default 10 ps)")
+    ap.add_argument("--max-step-A", type=float, default=DEFAULT_MAX_STEP_A,
+                    help="reject a window if either extracted z coordinate "
+                         "jumps farther than this between frames (default 2 A)")
     ap.add_argument("--kcv", type=float, default=DEFAULT_KCV,
                     help="colvars force constant in kcal/mol/A^2 (default 7.17)")
     ap.add_argument("--kwham-half", action="store_true",
@@ -208,6 +227,7 @@ def main() -> int:
 
     meta1_lines, meta2_lines = [], []
     kept = 0
+    frame_counts = []
     for win in win_dirs:
         nn = int(win.name[3:])
         # Window centers reproduce the two-solute ALC layout: solute 1 scans
@@ -226,6 +246,15 @@ def main() -> int:
             continue
         t, z1, z2 = res
 
+        max_step = max(np.max(np.abs(np.diff(z1))),
+                       np.max(np.abs(np.diff(z2)))) if z1.size > 1 else 0.0
+        if max_step > args.max_step_A:
+            sys.exit(
+                f"ERROR: {args.analog}/{win.name} has a {max_step:.3f} A "
+                "frame-to-frame jump after periodic centering; inspect the "
+                "trajectory or increase --max-step-A only if justified"
+            )
+
         f1 = traj_dir / f"{win.name}_s1.dat"
         f2 = traj_dir / f"{win.name}_s2.dat"
         np.savetxt(f1, np.column_stack([t, z1]), fmt="%10.2f %10.4f")
@@ -241,8 +270,15 @@ def main() -> int:
         meta1_path.write_text("\n".join(meta1_lines) + "\n")
         meta2_path.write_text("\n".join(meta2_lines) + "\n")
         kept += 1
+        frame_counts.append(z1.size)
         print(f"  + {win.name}  z1={z1c:6.2f}  z2={z2c:7.2f}  "
               f"frames={z1.size}")
+
+    if kept != 38:
+        sys.exit(f"ERROR: expected 38 complete windows, extracted {kept}")
+    if len(set(frame_counts)) != 1:
+        sys.exit(f"ERROR: inconsistent frame counts across windows: "
+                 f"{sorted(set(frame_counts))}")
 
     print(f"==> {args.analog}: {kept}/{len(win_dirs)} windows -> "
           f"{meta1_path}, {meta2_path}")
