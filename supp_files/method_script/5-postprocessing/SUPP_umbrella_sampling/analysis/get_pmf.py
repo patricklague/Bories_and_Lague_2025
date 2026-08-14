@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 #!/usr/bin/env python3
 """
 get_pmf.py
@@ -53,7 +52,7 @@ DEFAULT_TOL      = 1.0e-5
 DEFAULT_TEMP     = 303.15
 DEFAULT_NUM_PAD  = 0
 DEFAULT_SEED     = 12345
-DEFAULT_Z_BULK   = 35.0    # |z| >= Z_BULK averaged to zero the PMF
+DEFAULT_Z_BULK   = 30.0    # |z| >= Z_BULK averaged to zero the PMF
 DEFAULT_MAX_ITER = 100000  # safety cap for the python WHAM iteration
 KB_KCAL          = 0.0019872041   # Boltzmann constant in kcal/(mol K)
 
@@ -860,4 +859,3 @@ def main() -> int:
 if __name__ == "__main__":
     sys.exit(main())
 
->>>>>>> Stashed changes
