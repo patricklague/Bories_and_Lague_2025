@@ -35,6 +35,7 @@ set -euo pipefail
 HERE="${HERE:-../../../../../figures/data/SUPP_umbrella_sampling/}"
 ROOT="${ROOT:-../system_us/}"
 
+
 RUNS="${RUNS:-$ROOT/runs}"
 OUT_ROOT="${OUT_ROOT:-$HERE/pmf}"
 PYTHON="${PYTHON:-python3}"
@@ -77,7 +78,7 @@ for a in "${ANALOGS[@]}"; do
         read -r min_section max_section <<< "${BLOCK_RANGES[$i]}"
         echo "-- $a / $block (section$min_section-section$max_section) --"
 
-        "$PYTHON" "$HERE/extract_metadata.py"     \
+        "$PYTHON" ".extract_metadata.py"     \
             --analog       "$a"                   \
             --runs-dir     "$RUNS"                \
             --out-dir      "$OUT_DIR/$block"       \
@@ -86,7 +87,7 @@ for a in "${ANALOGS[@]}"; do
             --max-section  "$max_section"
     done
 
-    "$PYTHON" "$HERE/get_pmf.py"          \
+    "$PYTHON" "./get_pmf.py"          \
         --analog   "$a"                   \
         --in-dir   "$OUT_DIR"             \
         --out-dir  "$OUT_DIR"             \
