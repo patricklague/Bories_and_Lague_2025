@@ -78,7 +78,7 @@ for a in "${ANALOGS[@]}"; do
         read -r min_section max_section <<< "${BLOCK_RANGES[$i]}"
         echo "-- $a / $block (section$min_section-section$max_section) --"
 
-        "$PYTHON" ".extract_metadata.py"     \
+        "$PYTHON" "./extract_metadata.py"     \
             --analog       "$a"                   \
             --runs-dir     "$RUNS"                \
             --out-dir      "$OUT_DIR/$block"       \

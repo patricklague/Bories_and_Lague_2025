@@ -96,7 +96,28 @@ Once the raw contact files are produced, `raw_to_distribution.py` bins them into
 - `SUPP_membrane_parm/` — Per-system extraction and aggregation scripts that turn the raw `analysis_per_system.sh` outputs into the canonical `figures/data/SUPP_membrane_parm/` tables.
   - `thickness/`, `area_per_lipid/`, `order_parameter/`, `densityProfiles/` each contain a `run.sh` driver and a `get_*.py` extractor that merge the three per-trajectory raw files into a single per-analog `<aa>-<param>.dat`. Each `run.sh` keeps the original local source path as the active `DIR=...` and exposes a commented reviewer-facing alternative pointing at `../../../../results/POPC-aa/POPC-$aa/`. The merged file is moved to `figures/data/SUPP_membrane_parm/<subdir>/`.
   - `compute_thickness.py`, `compute_apl.py`, `compute_acm.py`, `compute_density_deviation.py`, `compute_order_deviation.py` — top-level aggregators that read the per-analog tables under `figures/data/SUPP_membrane_parm/<subdir>/` and produce the `computed_*.csv` summary files used by the figure notebooks.
-- `SUPP_umbrella_sampling/` — ...
+- `SUPP_umbrella_sampling/` — Independent umbrella-sampling PMF pipeline used to cross-check step 4. Split into `system_us/` (build + NAMD production) and `analysis/` (WHAM). Outputs: `figures/data/SUPP_umbrella_sampling/pmf/<analog>/pmf-us-<analog>.dat`.
+
+  ### `system_us/`
+
+  **Entry points:** `setup_all.sh` (build), then `launch_all.sh` (submit).
+
+  - `setup_all.sh` — loops over the 4 analogs (SCC, SCS, SCY, SCD) × 38 windows (1 Å spacing, two-solute / two-leaflet setup, MacCallum et al. 2008), calls `build_window.tcl`, then renders the `templates/` configs into `runs/<analog>/win<NN>/`.
+  - `launch_all.sh` — submits every per-window `submit.sh` to SLURM, self-resubmitting to 250 ns.
+  - `build/build_window.tcl` — psfgen script that inserts two analog copies into the CHARMM-GUI POPC bilayer, strips overlapping waters/ions (plus 2 counter-ions for charged SCD), tags `beta` (`1.0`/`2.0` = solutes, `3.0` = POPC P), and writes `system.psf`/`system.pdb`/`ref.pdb`.
+  - `build/analog/` — analog PDBs (`sc{c,s,y,d}.pdb`) + `toppar-namd/top_all36_sidechains.str`.
+  - `build/membrane/charmm-gui/` — base POPC bilayer (`namd/step5_input.{psf,pdb}`).
+  - `templates/colvars.in` — two `distanceZ` colvars restraining each solute vs the POPC P center of mass at K = 3000 kJ/mol/nm² (7.17 kcal/mol/Å²); window-specific `Z1`/`Z2` are substituted by `setup_all.sh`.
+  - `templates/submit.sh` — SLURM job script, self-resubmits until 250 ns of production.
+  - `toppar/` — flat CHARMM36 directory referenced by every NAMD config.
+
+  ### `analysis/`
+
+  **Entry point:** `run.sh` (three-block pipeline used in the paper).
+
+  - `run.sh` — for each analog under `../system_us/runs/` and each 50 ns block (`section101-150`, `151-200`, `201-250`), calls `extract_metadata.py` then `get_pmf.py`. Env overrides: `PYTHON`, `WHAM_BACKEND` (`python`/`grossfield`), `WHAM_BIN`, `EQUIL_PS`, `NBOOT`.
+  - `extract_metadata.py` — reads `system.psf`/`system.pdb` + `out/section*.dcd`, computes `z_solute − z_reference` (minimum-image along Lz), writes `traj/win<NN>_s{1,2}.dat` + `metadata_s{1,2}.dat`.
+  - `get_pmf.py` — runs WHAM per block (solutes 1 and 2 separately, folded to |z|), then averages the three blocks with SE = std/√n. Emits per-block `pmf_s{1,2}.dat` / `pmf-us-<analog>-<block>.dat` and the final `pmf-us-<analog>.dat` (`|z| (Å)`, `PMF (kcal/mol)`, `SE (kcal/mol)`, `n_blocks`).
 
 All scripts in this step apply the canonical naming conventions defined in `correctives/list_of_script.md` and emit headers compatible with `correctives/fix_header.py` so that no post-hoc header rewriting is needed.
 
