@@ -1,5 +1,6 @@
 # python WHAM  T=303.15  bins=200  range=[-38.0,38.0]  tol=1e-05
 # 38 windows, total counts = 189999
+# adjacent overlap: min=0.0826 median=0.1002
   iter    200  max|dF| = 1.213e-02
   iter    400  max|dF| = 5.279e-03
   iter    600  max|dF| = 2.466e-03
